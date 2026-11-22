@@ -7,6 +7,7 @@ variables (optionally loaded from a local .env file). See .env.example.
 import os
 from pathlib import Path
 
+import dj_database_url
 from django.contrib.messages import constants as message_constants
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -37,7 +38,15 @@ if not SECRET_KEY:
     else:
         raise RuntimeError("DJANGO_SECRET_KEY must be set when DJANGO_DEBUG is False.")
 
-ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost,testserver")
+ALLOWED_HOSTS = env_list(
+    "DJANGO_ALLOWED_HOSTS",
+    "127.0.0.1,localhost,testserver",
+)
+
+# Render provides this automatically for deployed web services.
+render_hostname = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
+if render_hostname and render_hostname not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(render_hostname)
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -64,6 +73,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -96,17 +106,28 @@ WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
 
 # ---------------------------------------------------------------------------
-# Database: SQLite by default (zero setup); MySQL 8 when DB_ENGINE=mysql
+# Database: Render PostgreSQL when DATABASE_URL is set; otherwise preserve
+# the existing local SQLite / optional MySQL configuration.
 # ---------------------------------------------------------------------------
-DB_ENGINE = os.environ.get("DB_ENGINE", "sqlite").lower()
-if DB_ENGINE == "mysql":
+DATABASE_URL = os.environ.get("DATABASE_URL")
+
+if DATABASE_URL:
+    DATABASES = {
+        "default": dj_database_url.config(
+            default=DATABASE_URL,
+            conn_max_age=600,
+            ssl_require=True,
+        )
+    }
+elif os.environ.get("DB_ENGINE", "sqlite").lower() == "mysql":
     try:
         import pymysql
 
-        pymysql.version_info = (2, 2, 1, "final", 0)  # satisfy Django's mysqlclient version check
+        pymysql.version_info = (2, 2, 1, "final", 0)
         pymysql.install_as_MySQLdb()
-    except ImportError:  # mysqlclient may be installed instead
+    except ImportError:  # pragma: no cover
         pass
+
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.mysql",
@@ -115,7 +136,10 @@ if DB_ENGINE == "mysql":
             "PASSWORD": os.environ.get("DB_PASSWORD", ""),
             "HOST": os.environ.get("DB_HOST", "127.0.0.1"),
             "PORT": os.environ.get("DB_PORT", "3306"),
-            "OPTIONS": {"charset": "utf8mb4", "init_command": "SET sql_mode='STRICT_TRANS_TABLES'"},
+            "OPTIONS": {
+                "charset": "utf8mb4",
+                "init_command": "SET sql_mode='STRICT_TRANS_TABLES'",
+            },
         }
     }
 else:
@@ -148,9 +172,20 @@ TIME_ZONE = "Asia/Kolkata"
 USE_I18N = True
 USE_TZ = True
 
-STATIC_URL = "static/"
+# Static files: WhiteNoise serves collected static assets in production.
+STATIC_URL = "/static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
+
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    
+    "staticfiles": {
+    "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+},
+}
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
@@ -188,9 +223,17 @@ CSRF_COOKIE_HTTPONLY = False  # JS reads the token for AJAX requests
 X_FRAME_OPTIONS = "DENY"
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_REFERRER_POLICY = "same-origin"
+
 if not DEBUG:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_SSL_REDIRECT = env_bool("DJANGO_SECURE_SSL_REDIRECT", True)
     SECURE_HSTS_SECONDS = 31536000
-    CSRF_TRUSTED_ORIGINS = env_list("DJANGO_CSRF_TRUSTED_ORIGINS")
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+    csrf_origins = env_list("DJANGO_CSRF_TRUSTED_ORIGINS")
+    if render_hostname:
+        render_origin = f"https://{render_hostname}"
+        if render_origin not in csrf_origins:
+            csrf_origins.append(render_origin)
+    CSRF_TRUSTED_ORIGINS = csrf_origins
