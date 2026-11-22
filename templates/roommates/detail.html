@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}{{ profile.user.display_name }} · Roommate{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <a href="{% url 'roommates:list' %}" class="small"><i class="bi bi-arrow-left"></i> Back to roommates</a>
+  <div class="row g-4 mt-1">
+    <div class="col-lg-7">
+      <div class="card p-4">
+        <div class="d-flex gap-3 align-items-center mb-3">
+          {% include "partials/avatar.html" with u=profile.user size="avatar-lg" %}
+          <div><h1 class="h3 mb-1">{{ profile.user.display_name }}</h1><div class="text-muted">{{ profile.user.profile.get_branch_display }} · {{ profile.user.profile.get_academic_year_display }}</div>
+            {% if not profile.is_active %}<span class="badge text-bg-secondary mt-1">Hidden from search</span>{% endif %}</div>
+        </div>
+        <p class="lead fs-6 fw-semibold">{{ profile.headline }}</p>
+        {% if profile.about %}<p>{{ profile.about|linebreaksbr }}</p>{% endif %}
+        <div class="row kv mt-3">
+          <div class="col-sm-6"><dt>Budget</dt><dd>₹{{ profile.budget_min }} – ₹{{ profile.budget_max }} / month</dd></div>
+          <div class="col-sm-6"><dt>Preferred location</dt><dd>{{ profile.get_preferred_location_display }}</dd></div>
+          <div class="col-sm-6"><dt>Accommodation</dt><dd>{{ profile.get_accommodation_type_display }}</dd></div>
+          <div class="col-sm-6"><dt>Food</dt><dd>{{ profile.get_food_preference_display }}</dd></div>
+          <div class="col-sm-6"><dt>Sleep schedule</dt><dd>{{ profile.get_sleep_schedule_display }}</dd></div>
+          <div class="col-sm-6"><dt>Cleanliness</dt><dd>{{ profile.get_cleanliness_display }}</dd></div>
+          {% if profile.move_in_date %}<div class="col-sm-6"><dt>Move-in</dt><dd>{{ profile.move_in_date|date:"d M Y" }}</dd></div>{% endif %}
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-5">
+      {% if compat %}
+      <div class="card p-4 mb-4">
+        <div class="d-flex align-items-center gap-3 mb-3"><div class="compat-ring lg" style="--p: {{ compat.score }}"><span>{{ compat.score }}%</span></div>
+          <div><h5 class="mb-1">Compatibility</h5><div class="small text-muted">{% if compat.matching %}You match on {{ compat.matching|join:", " }}{% else %}Few overlapping preferences{% endif %}</div></div></div>
+        <div class="small">
+          <div class="d-flex justify-content-between"><span>Budget</span><span>{{ compat.breakdown.budget }} / 30</span></div><div class="progress mb-2"><div class="progress-bar" style="width: {% widthratio compat.breakdown.budget 30 100 %}%"></div></div>
+          <div class="d-flex justify-content-between"><span>Location</span><span>{{ compat.breakdown.location }} / 25</span></div><div class="progress mb-2"><div class="progress-bar" style="width: {% widthratio compat.breakdown.location 25 100 %}%"></div></div>
+          <div class="d-flex justify-content-between"><span>Food preference</span><span>{{ compat.breakdown.food }} / 15</span></div><div class="progress mb-2"><div class="progress-bar" style="width: {% widthratio compat.breakdown.food 15 100 %}%"></div></div>
+          <div class="d-flex justify-content-between"><span>Sleep schedule</span><span>{{ compat.breakdown.sleep }} / 15</span></div><div class="progress mb-2"><div class="progress-bar" style="width: {% widthratio compat.breakdown.sleep 15 100 %}%"></div></div>
+          <div class="d-flex justify-content-between"><span>Cleanliness</span><span>{{ compat.breakdown.cleanliness }} / 15</span></div><div class="progress"><div class="progress-bar" style="width: {% widthratio compat.breakdown.cleanliness 15 100 %}%"></div></div>
+        </div>
+      </div>
+      {% elif not my_profile %}<div class="alert alert-info"><a href="{% url 'roommates:my_profile' %}">Create your roommate profile</a> to see your compatibility.</div>{% endif %}
+      <div class="card p-4">
+        {% if profile.user == user %}
+          <a href="{% url 'roommates:my_profile' %}" class="btn btn-primary w-100">Edit my profile</a>
+        {% else %}
+          <div class="d-flex gap-2 mb-3">
+            <button class="btn btn-soft flex-fill {% if is_saved %}saved{% endif %}" data-toggle-save="{% url 'roommates:api_save' profile.pk %}"><i class="bi {% if is_saved %}bi-heart-fill{% else %}bi-heart{% endif %}"></i> <span class="label">{% if is_saved %}Saved{% else %}Save{% endif %}</span></button>
+            <a href="{% url 'messaging:start' profile.user.pk %}" class="btn btn-soft flex-fill"><i class="bi bi-chat-dots"></i> Message</a>
+          </div>
+          {% if already_requested %}<div class="alert alert-secondary mb-0"><i class="bi bi-hourglass-split"></i> Request pending.</div>
+          {% else %}
+          <form method="post" action="{% url 'roommates:send_request' profile.pk %}">{% csrf_token %}
+            {% include "partials/field.html" with field=request_form.message %}
+            <button class="btn btn-primary w-100"><i class="bi bi-person-plus"></i> Send roommate request</button></form>
+          {% endif %}
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

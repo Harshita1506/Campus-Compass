@@ -1,0 +1,6 @@
+Django>=5.0,<5.2
+Pillow>=10.3
+django-filter>=24.2
+python-dotenv>=1.0
+# MySQL driver (pure Python, installs cleanly on Windows). Only used when DB_ENGINE=mysql.
+PyMySQL>=1.1

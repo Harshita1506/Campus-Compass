@@ -1,0 +1,44 @@
+{% extends "dashboard/admin_base.html" %}
+{% load static %}
+{% block title %}Admin overview{% endblock %}
+{% block admin_content %}
+<form method="get" class="filter-bar mb-4"><div class="row g-2 align-items-end">
+  <div class="col-sm-4 col-lg-3"><label class="form-label small">From</label>{{ form.start }}</div>
+  <div class="col-sm-4 col-lg-3"><label class="form-label small">To</label>{{ form.end }}</div>
+  <div class="col-sm-4 col-lg-2"><button class="btn btn-primary w-100"><i class="bi bi-funnel"></i> Apply</button></div>
+  <div class="col-lg-4 text-lg-end"><a href="{% url 'dashboard:admin' %}" class="btn btn-soft">Reset</a>
+    <div class="btn-group"><button class="btn btn-navy dropdown-toggle" data-bs-toggle="dropdown" type="button"><i class="bi bi-download"></i> Export CSV</button>
+      <ul class="dropdown-menu dropdown-menu-end">{% for key, label in reports.items %}<li><a class="dropdown-item" href="{% url 'dashboard:export_csv' key %}{% if query %}?{{ query }}{% endif %}">{{ label }}</a></li>{% endfor %}</ul></div></div>
+  {% if form.non_field_errors %}<div class="col-12 text-danger small">{{ form.non_field_errors }}</div>{% endif %}
+</div></form>
+
+<div class="row g-3 mb-4">
+  {% for label, value, icon, color in summary_cards %}
+  <div class="col-6 col-md-4 col-xl-2"><div class="card stat-card h-100">
+    <div class="stat-icon {{ color }}"><i class="bi {{ icon }}"></i></div>
+    <div><div class="stat-value">{{ value }}</div><div class="stat-label">{{ label }}</div></div></div></div>
+  {% endfor %}
+</div>
+
+<div id="admin-charts" data-url="{% url 'dashboard:admin_stats_api' %}" class="row g-4">
+  <div class="col-lg-4"><div class="card h-100"><div class="card-header">Lost vs found vs recovered</div><div class="card-body"><div class="chart-wrap"><canvas id="chart-lostfound"></canvas></div></div></div></div>
+  <div class="col-lg-4"><div class="card h-100"><div class="card-header">Products by category</div><div class="card-body"><div class="chart-wrap"><canvas id="chart-categories"></canvas></div></div></div></div>
+  <div class="col-lg-4"><div class="card h-100"><div class="card-header">Available vs sold</div><div class="card-body"><div class="chart-wrap"><canvas id="chart-sold"></canvas></div></div></div></div>
+  <div class="col-lg-6"><div class="card h-100"><div class="card-header">Student registrations</div><div class="card-body"><div class="chart-wrap"><canvas id="chart-registrations"></canvas></div></div></div></div>
+  <div class="col-lg-3"><div class="card h-100"><div class="card-header">Mentorship status</div><div class="card-body"><div class="chart-wrap"><canvas id="chart-mentorship"></canvas></div></div></div></div>
+  <div class="col-lg-3"><div class="card h-100"><div class="card-header">Accommodation preference</div><div class="card-body"><div class="chart-wrap"><canvas id="chart-accommodation"></canvas></div></div></div></div>
+</div>
+
+<div class="row g-4 mt-1">
+  <div class="col-lg-6"><div class="card h-100"><div class="card-header d-flex justify-content-between"><span>Open reports</span><a class="small" href="{% url 'dashboard:moderation' %}">Moderate</a></div><div class="card-body"><ul class="list-clean">
+    {% for r in recent_reports %}<li class="d-flex justify-content-between"><div><a href="{{ r.product.get_absolute_url }}">{{ r.product.title }}</a><div class="small text-muted">{{ r.get_reason_display }} · by {{ r.reporter.username }}</div></div><span class="small text-muted">{{ r.created_at|timesince }} ago</span></li>
+    {% empty %}<li class="text-muted">No open reports 🎉</li>{% endfor %}</ul></div></div></div>
+  <div class="col-lg-6"><div class="card h-100"><div class="card-header d-flex justify-content-between"><span>Newest members</span><a class="small" href="{% url 'dashboard:students' %}">Manage</a></div><div class="card-body"><ul class="list-clean">
+    {% for u in recent_users %}<li class="d-flex justify-content-between"><div>{{ u.display_name }} <span class="small text-muted">@{{ u.username }}</span></div><span>{% if u.is_email_verified %}<span class="badge status-available">Verified</span>{% else %}<span class="badge status-pending">Unverified</span>{% endif %}</span></li>
+    {% empty %}<li class="text-muted">No users yet.</li>{% endfor %}</ul></div></div></div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'vendor/chartjs/chart.umd.min.js' %}"></script>
+<script src="{% static 'js/admin_dashboard.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Marketplace{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <div class="page-header mb-4"><div class="d-flex flex-wrap justify-content-between align-items-center gap-3 position-relative" style="z-index:1">
+    <div><h1 class="h3 mb-1"><i class="bi bi-bag-heart me-2"></i>Buy &amp; Sell</h1><p>Pre-loved books, gadgets and hostel essentials from fellow students.</p></div>
+    <div class="d-flex gap-2"><a href="{% url 'marketplace:saved' %}" class="btn btn-light"><i class="bi bi-heart"></i> Saved</a><a href="{% url 'marketplace:create' %}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Sell an item</a></div>
+  </div></div>
+  <form class="filter-bar mb-4" data-live-url="{% url 'marketplace:api_search' %}" data-target="#mp-results" data-counter="#mp-count">
+    <div class="row g-2 align-items-center">
+      <div class="col-lg-4"><div class="search-input"><i class="bi bi-search"></i><input type="text" name="q" value="{{ filter_form.q.value|default:'' }}" class="form-control" placeholder="Search products…" autocomplete="off"></div></div>
+      <div class="col-6 col-lg-2"><select name="category" class="form-select">{% for v, l in filter_form.fields.category.choices %}<option value="{{ v }}" {% if filter_form.category.value == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
+      <div class="col-6 col-lg-2"><select name="condition" class="form-select">{% for v, l in filter_form.fields.condition.choices %}<option value="{{ v }}" {% if filter_form.condition.value == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
+      <div class="col-6 col-lg-1"><input type="number" min="0" name="min_price" value="{{ filter_form.min_price.value|default:'' }}" class="form-control" placeholder="Min ₹"></div>
+      <div class="col-6 col-lg-1"><input type="number" min="0" name="max_price" value="{{ filter_form.max_price.value|default:'' }}" class="form-control" placeholder="Max ₹"></div>
+      <div class="col-lg-2"><select name="sort" class="form-select">{% for v, l in filter_form.fields.sort.choices %}<option value="{{ v }}" {% if filter_form.sort.value == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
+    </div>
+    <div class="d-flex justify-content-between align-items-center mt-2">
+      <span class="small text-muted"><span id="mp-count">{{ page_obj.paginator.count }}</span> product(s)</span>
+      <div class="form-check form-switch small mb-0"><input class="form-check-input" type="checkbox" name="include_sold" id="inc-sold" {% if filter_form.include_sold.value %}checked{% endif %}><label for="inc-sold" class="form-check-label">Include sold</label></div>
+    </div>
+  </form>
+  <div class="row g-3" id="mp-results">{% include "marketplace/_cards.html" with products=page_obj %}</div>
+  {% include "partials/pagination.html" %}
+</div>
+{% endblock %}

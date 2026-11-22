@@ -1,0 +1,17 @@
+{% for product in products %}
+<div class="col-sm-6 col-lg-4 col-xl-3">
+  <div class="card listing-card card-hover h-100 position-relative">
+    <a href="{{ product.get_absolute_url }}" class="thumb text-reset">{% if product.image %}<img src="{{ product.image.url }}" alt="{{ product.title }}" loading="lazy">{% else %}<i class="bi bi-bag"></i>{% endif %}
+      {% if product.status != 'available' %}<span class="badge status-{{ product.status }} badge-pos">{{ product.get_status_display }}</span>{% endif %}</a>
+    {% if product.seller_id != user.id %}<button type="button" class="btn btn-icon save-btn {% if product.id in saved_ids %}saved{% endif %}" data-toggle-save="{% url 'marketplace:api_save' product.pk %}" aria-label="Save product"><i class="bi {% if product.id in saved_ids %}bi-heart-fill{% else %}bi-heart{% endif %}"></i></button>{% endif %}
+    <a href="{{ product.get_absolute_url }}" class="card-body text-reset">
+      <div class="price">₹{{ product.price|floatformat:0 }}</div>
+      <h6 class="mb-1 text-truncate">{{ product.title }}</h6>
+      <div class="d-flex gap-1 flex-wrap"><span class="chip chip-muted">{{ product.get_category_display }}</span><span class="chip">{{ product.get_condition_display }}</span></div>
+      <div class="small text-muted mt-2"><i class="bi bi-person"></i> {{ product.seller.display_name }} · {{ product.created_at|timesince }} ago</div>
+    </a>
+  </div>
+</div>
+{% empty %}
+<div class="col-12"><div class="empty-state"><i class="bi bi-bag-x"></i>No products match your filters.</div></div>
+{% endfor %}

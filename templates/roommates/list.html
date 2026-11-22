@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Find a roommate{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <div class="page-header mb-4"><div class="d-flex flex-wrap justify-content-between align-items-center gap-3 position-relative" style="z-index:1">
+    <div><h1 class="h3 mb-1"><i class="bi bi-house-heart me-2"></i>Find a Roommate</h1><p>Smart matching on budget (30%), location (25%), food, sleep &amp; cleanliness (15% each).</p></div>
+    <div class="d-flex gap-2"><a href="{% url 'roommates:requests' %}" class="btn btn-light"><i class="bi bi-inbox"></i> Requests</a><a href="{% url 'roommates:saved' %}" class="btn btn-light"><i class="bi bi-heart"></i> Saved</a><a href="{% url 'roommates:my_profile' %}" class="btn btn-primary">{% if my_profile %}Edit my profile{% else %}Create my profile{% endif %}</a></div>
+  </div></div>
+  {% if not my_profile %}<div class="alert alert-info"><i class="bi bi-lightbulb"></i> <a href="{% url 'roommates:my_profile' %}" class="fw-semibold">Create your roommate profile</a> to unlock compatibility scores and best-match sorting.</div>{% endif %}
+  <form class="filter-bar mb-4" data-live-url="{% url 'roommates:api_filter' %}" data-target="#rm-results" data-counter="#rm-count">
+    <div class="row g-2">
+      <div class="col-lg-3"><div class="search-input"><i class="bi bi-search"></i><input type="text" name="q" class="form-control" placeholder="Search name or headline…" value="{{ filter_form.q.value|default:'' }}" autocomplete="off"></div></div>
+      <div class="col-6 col-lg-2"><select name="location" class="form-select">{% for v, l in filter_form.fields.location.choices %}<option value="{{ v }}" {% if filter_form.location.value == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
+      <div class="col-6 col-lg-2"><select name="accommodation" class="form-select">{% for v, l in filter_form.fields.accommodation.choices %}<option value="{{ v }}" {% if filter_form.accommodation.value == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
+      <div class="col-6 col-lg-1"><select name="food" class="form-select">{% for v, l in filter_form.fields.food.choices %}<option value="{{ v }}" {% if filter_form.food.value == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
+      <div class="col-6 col-lg-2"><select name="sleep" class="form-select">{% for v, l in filter_form.fields.sleep.choices %}<option value="{{ v }}" {% if filter_form.sleep.value == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
+      <div class="col-6 col-lg-1"><input type="number" name="max_budget" class="form-control" placeholder="Max ₹" min="0" value="{{ filter_form.max_budget.value|default:'' }}"></div>
+      <div class="col-6 col-lg-1"><select name="sort" class="form-select">{% for v, l in filter_form.fields.sort.choices %}<option value="{{ v }}" {% if filter_form.sort.value == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
+    </div>
+    <div class="small text-muted mt-2"><span id="rm-count">{{ profiles|length }}</span> profile(s)</div>
+  </form>
+  <div class="row g-3" id="rm-results">{% include "roommates/_cards.html" %}</div>
+</div>
+{% endblock %}

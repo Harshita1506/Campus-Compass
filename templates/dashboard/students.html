@@ -1,0 +1,23 @@
+{% extends "dashboard/admin_base.html" %}
+{% block title %}Student management{% endblock %}
+{% block admin_content %}
+<form method="get" class="filter-bar mb-3"><div class="row g-2">
+  <div class="col-md-6"><div class="search-input"><i class="bi bi-search"></i><input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Search username, name or email"></div></div>
+  <div class="col-md-3"><select name="role" class="form-select"><option value="">All roles</option>{% for v, l in roles %}<option value="{{ v }}" {% if role == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
+  <div class="col-md-3"><button class="btn btn-primary w-100">Search</button></div>
+</div></form>
+<div class="card"><div class="table-responsive"><table class="table mb-0">
+  <thead><tr><th>User</th><th>Branch / year</th><th>Role</th><th>Verified</th><th>Active</th><th>Listings</th><th>Joined</th><th class="text-end">Actions</th></tr></thead>
+  <tbody>{% for u in page_obj %}<tr>
+    <td><a href="{% url 'accounts:public_profile' u.username %}" class="fw-semibold">{{ u.display_name }}</a><div class="small text-muted">{{ u.email }}</div></td>
+    <td class="small">{{ u.profile.branch }} · {{ u.profile.get_academic_year_display }}</td>
+    <td><form method="post" action="{% url 'dashboard:student_action' u.pk 'set_role' %}" class="d-flex gap-1">{% csrf_token %}
+      <select name="role" class="form-select form-select-sm" style="width:140px" {% if u.is_superuser or u == user %}disabled{% endif %} onchange="this.form.submit()">{% for v, l in roles %}<option value="{{ v }}" {% if u.role == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></form></td>
+    <td>{% if u.is_email_verified %}<i class="bi bi-patch-check-fill text-primary"></i>{% else %}<form method="post" action="{% url 'dashboard:student_action' u.pk 'verify' %}">{% csrf_token %}<button class="btn btn-sm btn-soft">Verify</button></form>{% endif %}</td>
+    <td>{% if u.is_active %}<span class="badge status-available">Active</span>{% else %}<span class="badge status-sold">Suspended</span>{% endif %}</td>
+    <td>{{ u.n_products }}</td><td class="small">{{ u.date_joined|date:"d M Y" }}</td>
+    <td class="text-end">{% if not u.is_superuser and u != user %}<form method="post" action="{% url 'dashboard:student_action' u.pk 'toggle_active' %}">{% csrf_token %}<button class="btn btn-sm {% if u.is_active %}btn-outline-danger{% else %}btn-soft{% endif %}">{% if u.is_active %}Suspend{% else %}Reactivate{% endif %}</button></form>{% endif %}</td>
+  </tr>{% empty %}<tr><td colspan="8" class="text-muted">No users found.</td></tr>{% endfor %}</tbody>
+</table></div></div>
+{% include "partials/pagination.html" %}
+{% endblock %}

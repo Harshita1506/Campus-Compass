@@ -1,0 +1,22 @@
+{% extends "dashboard/admin_base.html" %}
+{% block title %}Buildings &amp; rooms{% endblock %}
+{% block admin_content %}
+<div class="d-flex flex-wrap gap-2 mb-3"><a href="{% url 'dashboard:building_create' %}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Building</a><a href="{% url 'dashboard:room_create' %}" class="btn btn-soft"><i class="bi bi-plus-lg"></i> Room</a><a href="{% url 'dashboard:department_create' %}" class="btn btn-soft"><i class="bi bi-plus-lg"></i> Department</a><a href="{% url 'locator:map' %}" class="btn btn-soft ms-auto"><i class="bi bi-map"></i> View map</a></div>
+<div class="card mb-4"><div class="card-header">Buildings</div><div class="table-responsive"><table class="table mb-0">
+  <thead><tr><th>Name</th><th>Code</th><th>Type</th><th>Floors</th><th>Rooms</th><th>Coordinates</th><th></th></tr></thead>
+  <tbody>{% for b in buildings %}<tr><td class="fw-semibold">{{ b.name }}{% if b.is_demo %} <span class="badge text-bg-warning">Demo</span>{% endif %}</td><td>{{ b.code }}</td><td>{{ b.get_building_type_display }}</td><td>{{ b.floors }}</td><td>{{ b.n_rooms }}</td><td class="small text-muted">{{ b.latitude }}, {{ b.longitude }}</td>
+    <td class="text-end text-nowrap"><a href="{% url 'dashboard:building_edit' b.pk %}" class="btn btn-sm btn-soft">Edit</a>
+      <form method="post" action="{% url 'dashboard:delete_location' 'building' b.pk %}" class="d-inline" onsubmit="return confirm('Delete building and all its rooms?')">{% csrf_token %}<button class="btn btn-sm btn-outline-danger">Delete</button></form></td></tr>
+  {% empty %}<tr><td colspan="7" class="text-muted">No buildings yet.</td></tr>{% endfor %}</tbody></table></div></div>
+<div class="row g-4">
+  <div class="col-lg-8"><div class="card"><div class="card-header">Rooms</div><div class="table-responsive" style="max-height:520px"><table class="table mb-0">
+    <thead><tr><th>Room</th><th>Building</th><th>Floor</th><th>Type</th><th>Department / faculty</th><th></th></tr></thead>
+    <tbody>{% for r in rooms %}<tr><td class="fw-semibold">{{ r.room_number }} <span class="small text-muted">{{ r.name }}</span></td><td>{{ r.building.code }}</td><td>{{ r.floor }}</td><td>{{ r.get_room_type_display }}</td><td class="small">{{ r.department|default:"" }}{% if r.faculty_name %} · {{ r.faculty_name }}{% endif %}</td>
+      <td class="text-end text-nowrap"><a href="{% url 'dashboard:room_edit' r.pk %}" class="btn btn-sm btn-soft">Edit</a>
+        <form method="post" action="{% url 'dashboard:delete_location' 'room' r.pk %}" class="d-inline" onsubmit="return confirm('Delete room?')">{% csrf_token %}<button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button></form></td></tr>
+    {% empty %}<tr><td colspan="6" class="text-muted">No rooms yet.</td></tr>{% endfor %}</tbody></table></div></div></div>
+  <div class="col-lg-4"><div class="card"><div class="card-header">Departments</div><div class="card-body"><ul class="list-clean">
+    {% for d in departments %}<li class="d-flex justify-content-between"><div>{{ d.name }}<div class="small text-muted">{{ d.code }} · {{ d.building.code|default:"—" }}</div></div><a href="{% url 'dashboard:department_edit' d.pk %}" class="small">Edit</a></li>
+    {% empty %}<li class="text-muted">No departments.</li>{% endfor %}</ul></div></div></div>
+</div>
+{% endblock %}

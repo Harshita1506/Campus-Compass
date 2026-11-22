@@ -1,0 +1,26 @@
+{% for p in profiles %}
+<div class="col-md-6 col-xl-4">
+  <div class="card card-hover h-100 p-4 position-relative">
+    <button type="button" class="btn btn-icon btn-soft position-absolute top-0 end-0 m-3 save-btn {% if p.id in saved_ids %}saved{% endif %}" data-toggle-save="{% url 'roommates:api_save' p.pk %}" aria-label="Save profile"><i class="bi {% if p.id in saved_ids %}bi-heart-fill{% else %}bi-heart{% endif %}"></i></button>
+    <div class="d-flex gap-3 align-items-center mb-3">
+      {% include "partials/avatar.html" with u=p.user size="" %}
+      <div><a href="{{ p.get_absolute_url }}" class="fw-bold text-reset">{{ p.user.display_name }}</a><div class="small text-muted">{{ p.user.profile.get_branch_display|default:"" }} · {{ p.user.profile.get_academic_year_display }}</div></div>
+    </div>
+    <p class="small mb-3">{{ p.headline }}</p>
+    <div class="d-flex flex-wrap gap-1 mb-3">
+      <span class="chip"><i class="bi bi-currency-rupee"></i>{{ p.budget_min }}–{{ p.budget_max }}</span>
+      <span class="chip chip-muted"><i class="bi bi-geo-alt"></i> {{ p.get_preferred_location_display }}</span>
+      <span class="chip chip-muted"><i class="bi bi-building"></i> {{ p.get_accommodation_type_display }}</span>
+      <span class="chip chip-muted"><i class="bi bi-egg-fried"></i> {{ p.get_food_preference_display }}</span>
+    </div>
+    {% if p.compat %}
+    <div class="d-flex align-items-center gap-3 mt-auto">
+      <div class="compat-ring" style="--p: {{ p.compat.score }}"><span>{{ p.compat.score }}%</span></div>
+      <div class="small"><div class="fw-semibold">Compatibility</div><div class="text-muted">{% if p.compat.matching %}Matches on {{ p.compat.matching|join:", " }}{% else %}Few shared preferences{% endif %}</div></div>
+    </div>
+    {% else %}<div class="small text-muted mt-auto"><a href="{% url 'roommates:my_profile' %}">Create your profile</a> to see compatibility.</div>{% endif %}
+  </div>
+</div>
+{% empty %}
+<div class="col-12"><div class="empty-state"><i class="bi bi-people"></i>No roommate profiles match these filters.</div></div>
+{% endfor %}

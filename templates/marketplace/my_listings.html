@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}My listings{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3"><h1 class="h3 mb-0">My listings</h1><a href="{% url 'marketplace:create' %}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Sell an item</a></div>
+  <div class="card mb-4"><div class="table-responsive"><table class="table mb-0">
+    <thead><tr><th>Product</th><th>Price</th><th>Status</th><th>Saves</th><th>Enquiries</th><th></th></tr></thead>
+    <tbody>{% for p in products %}<tr>
+      <td><a href="{{ p.get_absolute_url }}" class="fw-semibold">{{ p.title }}</a>{% if p.is_hidden %} <span class="badge text-bg-warning">Hidden</span>{% endif %}</td>
+      <td>₹{{ p.price|floatformat:0 }}</td>
+      <td><select class="form-select form-select-sm" style="width:130px" onchange="CC.post('{% url 'marketplace:api_status' p.pk %}', {status: this.value}).then(d => CC.toast('Status: ' + d.label, 'success')).catch(e => CC.toast(e.message, 'danger'))">
+        {% for v, l in p.Status.choices %}<option value="{{ v }}" {% if p.status == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></td>
+      <td>{{ p.savedproduct_set.count }}</td><td>{{ p.enquiries.count }}</td>
+      <td class="text-end"><a href="{% url 'marketplace:edit' p.pk %}" class="btn btn-sm btn-soft">Edit</a> <a href="{% url 'marketplace:delete' p.pk %}" class="btn btn-sm btn-outline-danger">Delete</a></td>
+    </tr>{% empty %}<tr><td colspan="6"><div class="empty-state"><i class="bi bi-shop"></i>No listings yet.</div></td></tr>{% endfor %}</tbody>
+  </table></div></div>
+  <div class="card"><div class="card-header">Recent buyer enquiries</div><div class="card-body"><ul class="list-clean">
+    {% for e in enquiries %}<li class="d-flex justify-content-between flex-wrap gap-2"><div><span class="fw-semibold">{{ e.buyer.display_name }}</span> on <a href="{{ e.product.get_absolute_url }}">{{ e.product.title }}</a><div class="small text-muted">{{ e.message|truncatechars:100 }}</div></div><a class="btn btn-sm btn-soft" href="{% url 'messaging:start' e.buyer.pk %}">Reply</a></li>
+    {% empty %}<li class="text-muted">No enquiries yet.</li>{% endfor %}</ul></div></div>
+</div>
+{% endblock %}

@@ -1,0 +1,7 @@
+from django.apps import AppConfig
+
+
+class LocatorConfig(AppConfig):
+    default_auto_field = "django.db.models.BigAutoField"
+    name = "locator"
+    verbose_name = "Campus Locator"

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}My mentorship requests{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <h1 class="h3 mb-4">My mentorship requests</h1>
+  <div class="card"><div class="table-responsive"><table class="table mb-0">
+    <thead><tr><th>Senior</th><th>Topic</th><th>Sent</th><th>Status</th><th>Response</th></tr></thead>
+    <tbody>{% for r in requests %}<tr>
+      <td><a href="{{ r.senior.get_absolute_url }}" class="fw-semibold">{{ r.senior.user.display_name }}</a></td><td>{{ r.topic }}</td><td>{{ r.created_at|date:"d M Y" }}</td>
+      <td><span class="badge status-{{ r.status }}">{{ r.get_status_display }}</span></td>
+      <td class="small">{{ r.response_note|default:"—" }}{% if r.status == 'accepted' %} <a href="{% url 'messaging:start' r.senior.user.pk %}">Message</a>{% endif %}</td>
+    </tr>{% empty %}<tr><td colspan="5"><div class="empty-state"><i class="bi bi-mortarboard"></i>No requests yet. <a href="{% url 'mentorship:list' %}">Find a mentor</a></div></td></tr>{% endfor %}</tbody>
+  </table></div></div>
+</div>
+{% endblock %}

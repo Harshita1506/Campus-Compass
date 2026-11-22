@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Roommate requests{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <h1 class="h3 mb-4">Roommate requests</h1>
+  <div class="row g-4">
+    <div class="col-lg-6"><div class="card h-100"><div class="card-header">Received</div><div class="card-body"><ul class="list-clean">
+      {% for r in received %}<li data-request-row>
+        <div class="d-flex justify-content-between align-items-start gap-2">
+          <div class="d-flex gap-2">{% include "partials/avatar.html" with u=r.sender size="avatar-sm" %}<div><span class="fw-semibold">{{ r.sender.display_name }}</span>
+            {% if r.sender.roommate_profile %}<a class="small ms-1" href="{{ r.sender.roommate_profile.get_absolute_url }}">view profile</a>{% endif %}
+            <div class="small text-muted">{{ r.message|default:"No message" }}</div><div class="small text-muted">{{ r.created_at|timesince }} ago</div></div></div>
+          <div class="text-end"><div data-request-status><span class="badge status-{{ r.status }}">{{ r.get_status_display }}</span></div>
+            {% if r.status == 'pending' %}<div class="d-flex gap-1 mt-2">
+              <button class="btn btn-sm btn-primary" data-respond-url="{% url 'roommates:respond' r.pk 'accept' %}">Accept</button>
+              <button class="btn btn-sm btn-outline-danger" data-respond-url="{% url 'roommates:respond' r.pk 'reject' %}">Reject</button></div>{% endif %}
+            {% if r.status == 'accepted' %}<a class="small" href="{% url 'messaging:start' r.sender.pk %}">Message</a>{% endif %}</div>
+        </div></li>
+      {% empty %}<li class="text-muted">No requests received yet.</li>{% endfor %}</ul></div></div></div>
+    <div class="col-lg-6"><div class="card h-100"><div class="card-header">Sent</div><div class="card-body"><ul class="list-clean">
+      {% for r in sent %}<li class="d-flex justify-content-between"><div><span class="fw-semibold">{{ r.receiver.display_name }}</span><div class="small text-muted">{{ r.created_at|timesince }} ago</div></div>
+        <div><span class="badge status-{{ r.status }}">{{ r.get_status_display }}</span>{% if r.status == 'accepted' %} <a class="small" href="{% url 'messaging:start' r.receiver.pk %}">Message</a>{% endif %}</div></li>
+      {% empty %}<li class="text-muted">You haven't sent any requests.</li>{% endfor %}</ul></div></div></div>
+  </div>
+</div>
+{% endblock %}

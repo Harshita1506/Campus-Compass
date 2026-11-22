@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}{{ product.title }}{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <a href="{% url 'marketplace:list' %}" class="small"><i class="bi bi-arrow-left"></i> Back to marketplace</a>
+  {% if product.is_hidden %}<div class="alert alert-warning mt-2"><i class="bi bi-eye-slash"></i> This listing is hidden by moderators and not visible to other students.</div>{% endif %}
+  <div class="row g-4 mt-1">
+    <div class="col-lg-7">
+      <div class="card p-3">
+        {% with imgs=product.images %}
+        {% if imgs %}
+        <div id="productCarousel" class="carousel slide"><div class="carousel-inner">
+          {% for img in imgs %}<div class="carousel-item {% if forloop.first %}active{% endif %}"><img src="{{ img.url }}" class="detail-img" alt="{{ product.title }} photo {{ forloop.counter }}"></div>{% endfor %}
+        </div>{% if imgs|length > 1 %}<button class="carousel-control-prev" type="button" data-bs-target="#productCarousel" data-bs-slide="prev"><span class="carousel-control-prev-icon"></span></button><button class="carousel-control-next" type="button" data-bs-target="#productCarousel" data-bs-slide="next"><span class="carousel-control-next-icon"></span></button>{% endif %}</div>
+        {% else %}<div class="d-flex align-items-center justify-content-center rounded-4" style="height:340px;background:linear-gradient(135deg,var(--cc-blue-soft),var(--cc-lavender))"><i class="bi bi-bag" style="font-size:4rem;color:var(--cc-indigo);opacity:.5"></i></div>{% endif %}
+        {% endwith %}
+        <div class="p-2 mt-3"><h5>About this item</h5><p class="mb-0">{{ product.description|linebreaksbr }}</p></div>
+      </div>
+    </div>
+    <div class="col-lg-5">
+      <div class="card p-4 mb-4">
+        <div class="d-flex justify-content-between align-items-start">
+          <div><span class="badge status-{{ product.status }}" data-status-badge>{{ product.get_status_display }}</span>
+            <h1 class="h3 mt-2 mb-1">{{ product.title }}</h1><div class="price fs-3">₹{{ product.price|floatformat:2 }}</div></div>
+          {% if not is_owner %}<button class="btn btn-soft {% if is_saved %}saved{% endif %}" data-toggle-save="{% url 'marketplace:api_save' product.pk %}"><i class="bi {% if is_saved %}bi-heart-fill{% else %}bi-heart{% endif %}"></i> <span class="label">{% if is_saved %}Saved{% else %}Save{% endif %}</span></button>{% endif %}
+        </div>
+        <div class="d-flex gap-2 my-3"><span class="chip chip-muted">{{ product.get_category_display }}</span><span class="chip">{{ product.get_condition_display }}</span></div>
+        <a href="{% url 'marketplace:seller' product.seller.username %}" class="d-flex align-items-center gap-2 p-3 rounded-4 text-reset" style="background:var(--cc-bg)">
+          {% include "partials/avatar.html" with u=product.seller size="" %}
+          <div><div class="fw-semibold">{{ product.seller.display_name }}</div><div class="small text-muted">{{ product.seller.profile.get_branch_display }} · View seller profile</div></div></a>
+        {% if is_owner %}
+          <div class="mt-3"><label class="form-label">Update status</label><div class="d-flex flex-wrap gap-2">
+            <button class="btn btn-sm btn-soft" data-status-url="{% url 'marketplace:api_status' product.pk %}" data-status="available">Available</button>
+            <button class="btn btn-sm btn-soft" data-status-url="{% url 'marketplace:api_status' product.pk %}" data-status="reserved">Reserved</button>
+            <button class="btn btn-sm btn-primary" data-status-url="{% url 'marketplace:api_status' product.pk %}" data-status="sold" data-confirm="Mark as sold?">Mark sold</button>
+          </div></div>
+          <div class="d-flex gap-2 mt-3"><a href="{% url 'marketplace:edit' product.pk %}" class="btn btn-soft flex-fill"><i class="bi bi-pencil"></i> Edit</a><a href="{% url 'marketplace:delete' product.pk %}" class="btn btn-outline-danger"><i class="bi bi-trash"></i></a></div>
+        {% elif product.status != 'sold' %}
+          <form method="post" action="{% url 'marketplace:enquire' product.pk %}" class="mt-3">{% csrf_token %}
+            {% include "partials/field.html" with field=enquiry_form.message %}
+            {% include "partials/field.html" with field=enquiry_form.offered_price %}
+            <button class="btn btn-primary w-100"><i class="bi bi-send"></i> Send enquiry to seller</button></form>
+          <a href="{% url 'messaging:start' product.seller.pk %}?subject={{ product.title|urlencode }}" class="btn btn-link w-100 mt-1">or open a chat</a>
+        {% endif %}
+      </div>
+      {% if is_owner %}
+      <div class="card"><div class="card-header">Buyer enquiries ({{ enquiries|length }})</div><div class="card-body"><ul class="list-clean">
+        {% for e in enquiries %}<li><div class="d-flex justify-content-between"><span class="fw-semibold">{{ e.buyer.display_name }}</span><span class="small text-muted">{{ e.created_at|timesince }} ago</span></div>
+          <div class="small">{{ e.message }}</div>{% if e.offered_price %}<div class="small text-primary fw-semibold">Offer: ₹{{ e.offered_price|floatformat:0 }}</div>{% endif %}
+          <a href="{% url 'messaging:start' e.buyer.pk %}" class="small">Reply</a></li>{% empty %}<li class="text-muted small">No enquiries yet.</li>{% endfor %}</ul></div></div>
+      {% else %}
+      <details class="card p-3"><summary class="small text-muted"><i class="bi bi-flag"></i> Report this listing</summary>
+        <form method="post" action="{% url 'marketplace:report' product.pk %}" class="mt-3">{% csrf_token %}
+          {% include "partials/field.html" with field=report_form.reason %}{% include "partials/field.html" with field=report_form.details %}
+          <button class="btn btn-sm btn-outline-danger">Submit report</button></form></details>
+      {% endif %}
+    </div>
+  </div>
+  {% if similar %}<h5 class="mt-5 mb-3">Similar items</h5><div class="row g-3">{% include "marketplace/_cards.html" with products=similar saved_ids="" %}</div>{% endif %}
+</div>
+{% endblock %}

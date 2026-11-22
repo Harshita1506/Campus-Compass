@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Notifications{% endblock %}
+{% block content %}
+<div class="container py-4" style="max-width:860px">
+  <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <h1 class="h3 mb-0"><i class="bi bi-bell"></i> Notification center</h1>
+    <div class="d-flex gap-2"><div class="btn-group"><a href="?show=all" class="btn btn-sm {% if show == 'all' %}btn-primary{% else %}btn-soft{% endif %}">All</a><a href="?show=unread" class="btn btn-sm {% if show == 'unread' %}btn-primary{% else %}btn-soft{% endif %}">Unread</a></div>
+      <button id="mark-all-read-page" class="btn btn-sm btn-soft" onclick="CC.post('{% url 'notifications:api_mark_all_read' %}').then(() => location.reload())">Mark all read</button></div>
+  </div>
+  <style>.notif-item.unread{background:var(--cc-indigo-50)} .notif-item.unread .dot{display:inline-block}</style>
+  <div class="card">{% for n in page_obj %}
+    <div class="notif-item d-flex gap-3 p-3 border-bottom {% if not n.is_read %}unread{% endif %}">
+      <div class="stat-icon bg-indigo-soft" style="width:42px;height:42px"><i class="bi {{ n.icon }}"></i></div>
+      <div class="flex-grow-1"><a href="{% url 'notifications:open' n.pk %}" class="fw-semibold text-reset">{{ n.title }}</a><div class="small text-muted">{{ n.message }}</div><div class="small text-muted">{{ n.created_at|timesince }} ago · {{ n.get_notification_type_display }}</div></div>
+      {% if not n.is_read %}<button class="btn btn-sm btn-soft align-self-center" data-mark-read="{% url 'notifications:api_mark_read' n.pk %}">Mark read</button>{% endif %}
+    </div>
+  {% empty %}<div class="empty-state"><i class="bi bi-bell-slash"></i>No notifications here.</div>{% endfor %}</div>
+  {% include "partials/pagination.html" %}
+</div>
+{% endblock %}

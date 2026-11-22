@@ -1,0 +1,124 @@
+{% load static %}<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ SITE_NAME }}{% endblock %} · {{ SITE_NAME }}</title>
+  <meta name="description" content="{{ SITE_NAME }} — {{ SITE_TAGLINE }}">
+  <link rel="icon" href="{% static 'images/favicon.svg' %}" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="{% static 'vendor/bootstrap/bootstrap.min.css' %}" rel="stylesheet">
+  <link href="{% static 'vendor/bootstrap-icons/bootstrap-icons.min.css' %}" rel="stylesheet">
+  {% block extra_head %}{% endblock %}
+  <link href="{% static 'css/style.css' %}" rel="stylesheet">
+</head>
+<body {% if user.is_authenticated %}data-auth="1"{% endif %}>
+{% with url_name=request.resolver_match.namespace %}
+<nav class="navbar navbar-expand-lg cc-navbar sticky-top">
+  <div class="container">
+    <a class="navbar-brand" href="{% if user.is_authenticated %}{% url 'dashboard:home' %}{% else %}{% url 'landing' %}{% endif %}">
+      <img src="{% static 'images/logo.svg' %}" width="34" height="34" alt=""> Campus Compass
+    </a>
+    <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="mainNav">
+      {% if user.is_authenticated %}
+      <ul class="navbar-nav mx-auto gap-1">
+        <li class="nav-item"><a class="nav-link {% if url_name == 'dashboard' and request.resolver_match.url_name == 'home' %}active{% endif %}" href="{% url 'dashboard:home' %}"><i class="bi bi-grid-1x2"></i> Home</a></li>
+        <li class="nav-item"><a class="nav-link {% if url_name == 'lostfound' %}active{% endif %}" href="{% url 'lostfound:list' %}"><i class="bi bi-search-heart"></i> Lost &amp; Found</a></li>
+        <li class="nav-item"><a class="nav-link {% if url_name == 'marketplace' %}active{% endif %}" href="{% url 'marketplace:list' %}"><i class="bi bi-bag"></i> Marketplace</a></li>
+        <li class="nav-item"><a class="nav-link {% if url_name == 'roommates' %}active{% endif %}" href="{% url 'roommates:list' %}"><i class="bi bi-house-heart"></i> Roommates</a></li>
+        <li class="nav-item"><a class="nav-link {% if url_name == 'locator' %}active{% endif %}" href="{% url 'locator:map' %}"><i class="bi bi-geo-alt"></i> Locator</a></li>
+        <li class="nav-item"><a class="nav-link {% if url_name == 'mentorship' %}active{% endif %}" href="{% url 'mentorship:list' %}"><i class="bi bi-mortarboard"></i> Seniors</a></li>
+        <li class="nav-item"><a class="nav-link {% if url_name == 'announcements' %}active{% endif %}" href="{% url 'announcements:list' %}"><i class="bi bi-megaphone"></i> Events</a></li>
+      </ul>
+      <ul class="navbar-nav align-items-lg-center gap-1">
+        <li class="nav-item"><a class="nav-link position-relative" href="{% url 'messaging:inbox' %}" title="Messages"><i class="bi bi-chat-dots fs-5"></i></a></li>
+        <li class="nav-item dropdown">
+          <a class="nav-link position-relative" href="#" data-bs-toggle="dropdown" aria-expanded="false" title="Notifications">
+            <i class="bi bi-bell fs-5"></i>
+            <span id="notif-count" class="badge rounded-pill bg-danger notif-badge {% if not unread_notification_count %}d-none{% endif %}">{{ unread_notification_count }}</span>
+          </a>
+          <div class="dropdown-menu dropdown-menu-end notif-dropdown">
+            <div class="d-flex justify-content-between align-items-center px-2 py-1">
+              <span class="fw-bold">Notifications</span>
+              <a href="#" id="mark-all-read" class="small">Mark all read</a>
+            </div>
+            <div id="notif-list"><div class="text-center text-muted small py-3">Loading…</div></div>
+            <div class="border-top mt-1 pt-1"><a class="dropdown-item text-center small fw-semibold" href="{% url 'notifications:list' %}">Open notification center</a></div>
+          </div>
+        </li>
+        <li class="nav-item dropdown">
+          <a class="nav-link d-flex align-items-center gap-2" href="#" data-bs-toggle="dropdown" aria-expanded="false">
+            {% if user.profile.avatar %}<img src="{{ user.profile.avatar.url }}" class="avatar avatar-sm" alt="">{% else %}<span class="avatar avatar-sm">{{ user.initials }}</span>{% endif %}
+            <span class="d-lg-none d-xl-inline">{{ user.first_name|default:user.username }}</span>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" href="{% url 'accounts:profile' %}"><i class="bi bi-person me-2"></i>My profile</a></li>
+            <li><a class="dropdown-item" href="{% url 'marketplace:my_listings' %}"><i class="bi bi-shop me-2"></i>My listings</a></li>
+            <li><a class="dropdown-item" href="{% url 'lostfound:my_items' %}"><i class="bi bi-box-seam me-2"></i>My lost &amp; found</a></li>
+            <li><a class="dropdown-item" href="{% url 'marketplace:saved' %}"><i class="bi bi-heart me-2"></i>Saved products</a></li>
+            <li><a class="dropdown-item" href="{% url 'roommates:requests' %}"><i class="bi bi-people me-2"></i>Roommate requests</a></li>
+            <li><a class="dropdown-item" href="{% url 'mentorship:my_requests' %}"><i class="bi bi-mortarboard me-2"></i>Mentorship requests</a></li>
+            {% if user.is_senior %}<li><a class="dropdown-item" href="{% url 'mentorship:incoming' %}"><i class="bi bi-inbox me-2"></i>Mentee requests</a></li>{% endif %}
+            {% if is_site_admin %}<li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="{% url 'dashboard:admin' %}"><i class="bi bi-speedometer2 me-2"></i>Admin dashboard</a></li>{% endif %}
+            <li><hr class="dropdown-divider"></li>
+            <li><form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}<button class="dropdown-item text-danger"><i class="bi bi-box-arrow-right me-2"></i>Log out</button></form></li>
+          </ul>
+        </li>
+      </ul>
+      {% else %}
+      <ul class="navbar-nav mx-auto gap-1">
+        <li class="nav-item"><a class="nav-link" href="{% url 'landing' %}#features">Features</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'landing' %}#how">How it works</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'landing' %}#updates">Campus updates</a></li>
+      </ul>
+      <div class="d-flex gap-2">
+        <a class="btn btn-soft" href="{% url 'accounts:login' %}">Log in</a>
+        <a class="btn btn-primary" href="{% url 'accounts:register' %}">Join free</a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</nav>
+{% endwith %}
+
+{% if messages %}
+<div class="container mt-3">
+  {% for message in messages %}
+  <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show shadow-sm" role="alert">
+    {{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<main>{% block content %}{% endblock %}</main>
+
+<footer class="cc-footer">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-md-5">
+        <div class="d-flex align-items-center gap-2 mb-2"><img src="{% static 'images/logo.svg' %}" width="32" height="32" alt=""><span class="fw-bold text-white fs-5">Campus Compass</span></div>
+        <p class="small mb-0">{{ SITE_TAGLINE }}<br>A student community platform built with Django — a Full Stack Development PBL project.</p>
+      </div>
+      <div class="col-6 col-md-2"><h6>Explore</h6><ul class="list-unstyled small">
+        <li><a href="{% url 'lostfound:list' %}">Lost &amp; Found</a></li><li><a href="{% url 'marketplace:list' %}">Marketplace</a></li><li><a href="{% url 'roommates:list' %}">Roommates</a></li></ul></div>
+      <div class="col-6 col-md-2"><h6>Campus</h6><ul class="list-unstyled small">
+        <li><a href="{% url 'locator:map' %}">Campus locator</a></li><li><a href="{% url 'mentorship:list' %}">Seniors</a></li><li><a href="{% url 'announcements:list' %}">Events</a></li></ul></div>
+      <div class="col-md-3"><h6>Safety first</h6><p class="small mb-0">Meet in public campus spaces for exchanges. Never share passwords or OTPs. Report suspicious listings.</p></div>
+    </div>
+    <hr class="border-secondary mt-4">
+    <div class="small d-flex justify-content-between flex-wrap gap-2"><span>&copy; {% now "Y" %} Campus Compass · Educational project</span><span>All demo data is fictional.</span></div>
+  </div>
+</footer>
+
+<div id="toast-area" class="toast-container position-fixed bottom-0 end-0 p-3"></div>
+<script src="{% static 'vendor/bootstrap/bootstrap.bundle.min.js' %}"></script>
+<script src="{% static 'js/main.js' %}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

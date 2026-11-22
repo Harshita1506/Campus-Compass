@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}{{ item.title }}{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <a href="{% url 'lostfound:list' %}" class="small"><i class="bi bi-arrow-left"></i> Back to Lost &amp; Found</a>
+  <div class="row g-4 mt-1">
+    <div class="col-lg-7">
+      <div class="card p-3">
+        {% if item.image %}<img src="{{ item.image.url }}" class="detail-img" alt="{{ item.title }}">{% else %}<div class="d-flex align-items-center justify-content-center rounded-4" style="height:320px;background:linear-gradient(135deg,var(--cc-blue-soft),var(--cc-lavender))"><i class="bi bi-box-seam" style="font-size:4rem;color:var(--cc-indigo);opacity:.5"></i></div>{% endif %}
+        <div class="p-2 mt-3"><h5>Description</h5><p class="mb-0">{{ item.description|linebreaksbr }}</p></div>
+      </div>
+    </div>
+    <div class="col-lg-5">
+      <div class="card p-4">
+        <div class="d-flex gap-2 mb-2"><span class="badge type-{{ item.item_type }}">{{ item.get_item_type_display }}</span><span class="badge status-{{ item.status }}" data-status-badge>{{ item.get_status_display }}</span></div>
+        <h1 class="h3">{{ item.title }}</h1>
+        <dl class="kv mt-3">
+          <dt>Category</dt><dd>{{ item.get_category_display }}</dd>
+          <dt>Location</dt><dd><i class="bi bi-geo-alt text-primary"></i> {{ item.location }}</dd>
+          <dt>Date {{ item.get_item_type_display|lower }}</dt><dd>{{ item.date|date:"l, d F Y" }}</dd>
+          <dt>Reported by</dt><dd><a href="{% url 'accounts:public_profile' item.owner.username %}">{{ item.owner.display_name }}</a> · {{ item.created_at|timesince }} ago</dd>
+        </dl>
+        {% if item.owner == user %}
+          <div class="d-flex flex-wrap gap-2">
+            {% if item.status == 'open' %}<button class="btn btn-primary" data-status-url="{% url 'lostfound:api_status' item.pk %}" data-status="recovered" data-confirm="Mark this item as recovered?" data-reload="1"><i class="bi bi-check2-circle"></i> Mark as recovered</button>
+            {% else %}<button class="btn btn-soft" data-status-url="{% url 'lostfound:api_status' item.pk %}" data-status="open" data-reload="1">Re-open</button>{% endif %}
+            <a href="{% url 'lostfound:edit' item.pk %}" class="btn btn-soft"><i class="bi bi-pencil"></i> Edit</a>
+            <a href="{% url 'lostfound:delete' item.pk %}" class="btn btn-outline-danger"><i class="bi bi-trash"></i></a>
+          </div>
+        {% else %}
+          <a href="{% url 'messaging:start' item.owner.pk %}?subject={{ item.title|urlencode }}" class="btn btn-primary w-100"><i class="bi bi-chat-dots"></i> {% if item.item_type == 'found' %}This is mine — contact finder{% else %}I found this — contact owner{% endif %}</a>
+          <p class="small text-muted mt-2 mb-0"><i class="bi bi-shield-check"></i> Verify ownership by describing unique details before handing items over.</p>
+        {% endif %}
+      </div>
+      {% if item.owner == user and item.status == 'open' %}
+      <div class="card mt-4"><div class="card-header"><i class="bi bi-magic text-primary"></i> Potential matches</div><div class="card-body">
+        {% for match, score in matches %}
+          <a href="{{ match.get_absolute_url }}" class="d-flex justify-content-between align-items-center py-2 border-bottom text-reset">
+            <div><div class="fw-semibold">{{ match.title }}</div><div class="small text-muted">{{ match.location }} · {{ match.date|date:"d M" }}</div></div>
+            <span class="chip">{{ score }}%</span></a>
+        {% empty %}<p class="text-muted small mb-0">No strong matches yet. We'll notify you when one appears.</p>{% endfor %}
+        <p class="small text-muted mt-2 mb-0">Score = name (40%) + category (25%) + location (20%) + date proximity (15%).</p>
+      </div></div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

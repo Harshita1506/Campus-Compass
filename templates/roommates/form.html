@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}My roommate profile{% endblock %}
+{% block content %}
+<div class="container py-4" style="max-width:860px">
+  <div class="card p-4">
+    <h1 class="h4 mb-1">{% if is_new %}Create{% else %}Edit{% endif %} roommate profile</h1>
+    <p class="text-muted mb-4">Your preferences power the compatibility score others see.</p>
+    <form method="post" novalidate>{% csrf_token %}
+      {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+      <div class="row">
+        <div class="col-12">{% include "partials/field.html" with field=form.headline %}</div>
+        <div class="col-12">{% include "partials/field.html" with field=form.about %}</div>
+        <div class="col-md-6">{% include "partials/field.html" with field=form.budget_min %}</div>
+        <div class="col-md-6">{% include "partials/field.html" with field=form.budget_max %}</div>
+        <div class="col-md-6">{% include "partials/field.html" with field=form.preferred_location %}</div>
+        <div class="col-md-6">{% include "partials/field.html" with field=form.accommodation_type %}</div>
+        <div class="col-md-4">{% include "partials/field.html" with field=form.food_preference %}</div>
+        <div class="col-md-4">{% include "partials/field.html" with field=form.sleep_schedule %}</div>
+        <div class="col-md-4">{% include "partials/field.html" with field=form.cleanliness %}</div>
+        <div class="col-md-6">{% include "partials/field.html" with field=form.move_in_date %}</div>
+        <div class="col-md-6 d-flex align-items-end">{% include "partials/field.html" with field=form.is_active %}</div>
+      </div>
+      <div class="d-flex gap-2"><button class="btn btn-primary">Save profile</button><a href="{% url 'roommates:list' %}" class="btn btn-soft">Cancel</a></div>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}My lost &amp; found{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3"><h1 class="h3 mb-0">My lost &amp; found reports</h1><a href="{% url 'lostfound:create' %}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> New report</a></div>
+  <div class="card"><div class="table-responsive"><table class="table mb-0">
+    <thead><tr><th>Item</th><th>Type</th><th>Location</th><th>Date</th><th>Status</th><th></th></tr></thead>
+    <tbody>{% for item in items %}<tr>
+      <td><a href="{{ item.get_absolute_url }}" class="fw-semibold">{{ item.title }}</a></td>
+      <td><span class="badge type-{{ item.item_type }}">{{ item.get_item_type_display }}</span></td>
+      <td>{{ item.location }}</td><td>{{ item.date|date:"d M Y" }}</td>
+      <td><span class="badge status-{{ item.status }}">{{ item.get_status_display }}</span></td>
+      <td class="text-end"><a href="{% url 'lostfound:edit' item.pk %}" class="btn btn-sm btn-soft">Edit</a> <a href="{% url 'lostfound:delete' item.pk %}" class="btn btn-sm btn-outline-danger">Delete</a></td>
+    </tr>{% empty %}<tr><td colspan="6"><div class="empty-state"><i class="bi bi-box-seam"></i>You haven't reported anything yet.</div></td></tr>{% endfor %}</tbody>
+  </table></div></div>
+</div>
+{% endblock %}

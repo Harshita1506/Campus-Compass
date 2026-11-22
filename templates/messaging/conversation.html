@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Chat with {{ other.display_name }}{% endblock %}
+{% block content %}
+<div class="container py-4" style="max-width:860px">
+  <div class="card overflow-hidden">
+    <div class="card-header d-flex align-items-center gap-2"><a href="{% url 'messaging:inbox' %}" class="btn btn-icon btn-soft btn-sm"><i class="bi bi-arrow-left"></i></a>
+      {% include "partials/avatar.html" with u=other size="avatar-sm" %}<div><a href="{% url 'accounts:public_profile' other.username %}" class="text-reset">{{ other.display_name }}</a>{% if conversation.subject %}<div class="small text-muted fw-normal">Re: {{ conversation.subject }}</div>{% endif %}</div>
+      <span class="ms-auto small text-muted fw-normal"><i class="bi bi-lock"></i> Private</span></div>
+    <div id="chat-box" class="chat-box" data-last-id="{{ last_id }}" data-poll-url="{% url 'messaging:api_messages' conversation.pk %}" data-send-url="{% url 'messaging:api_send' conversation.pk %}">
+      {% for m in chat_messages %}<div class="bubble {% if m.sender_id == user.id %}mine{% else %}theirs{% endif %}" data-id="{{ m.id }}">{{ m.body }}<div class="meta">{{ m.created_at|date:"d M, h:i A" }}</div></div>
+      {% empty %}<div class="text-center text-muted small py-5">Say hello 👋 — messages are only visible to the two of you.</div>{% endfor %}
+    </div>
+    <form id="chat-form" method="post" action="{% url 'messaging:send' conversation.pk %}" class="p-3 border-top d-flex gap-2">{% csrf_token %}
+      <textarea name="body" rows="1" class="form-control" placeholder="Type a message… (Enter to send)" maxlength="2000" required></textarea>
+      <button class="btn btn-primary"><i class="bi bi-send"></i></button>
+    </form>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}<script src="{% static 'js/messaging.js' %}"></script>{% endblock %}

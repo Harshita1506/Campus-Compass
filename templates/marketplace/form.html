@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="container py-4" style="max-width:860px">
+  <div class="card p-4">
+    <h1 class="h4 mb-1">{{ title }}</h1><p class="text-muted mb-4">Good photos and honest descriptions sell faster. No online payments — meet on campus.</p>
+    <form method="post" enctype="multipart/form-data" novalidate>{% csrf_token %}
+      {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+      <div class="row">
+        <div class="col-12">{% include "partials/field.html" with field=form.title %}</div>
+        <div class="col-md-4">{% include "partials/field.html" with field=form.category %}</div>
+        <div class="col-md-4">{% include "partials/field.html" with field=form.condition %}</div>
+        <div class="col-md-4">{% include "partials/field.html" with field=form.price %}</div>
+        <div class="col-12">{% include "partials/field.html" with field=form.description %}</div>
+        <div class="col-md-4">{% include "partials/field.html" with field=form.image %}</div>
+        <div class="col-md-4">{% include "partials/field.html" with field=form.image_2 %}</div>
+        <div class="col-md-4">{% include "partials/field.html" with field=form.image_3 %}</div>
+      </div>
+      <div class="d-flex gap-2"><button class="btn btn-primary">Publish listing</button><a href="{% if product %}{{ product.get_absolute_url }}{% else %}{% url 'marketplace:list' %}{% endif %}" class="btn btn-soft">Cancel</a></div>
+    </form>
+  </div>
+</div>
+{% endblock %}

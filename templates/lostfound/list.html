@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Lost &amp; Found{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <div class="page-header mb-4"><div class="d-flex flex-wrap justify-content-between align-items-center gap-3 position-relative" style="z-index:1">
+    <div><h1 class="h3 mb-1"><i class="bi bi-search-heart me-2"></i>Lost &amp; Found</h1><p>Report, search and recover items across campus.</p></div>
+    <div class="d-flex gap-2"><a href="{% url 'lostfound:create' %}?type=lost" class="btn btn-light">I lost something</a><a href="{% url 'lostfound:create' %}?type=found" class="btn btn-primary">I found something</a></div>
+  </div></div>
+  <form class="filter-bar mb-4" data-live-url="{% url 'lostfound:api_search' %}" data-target="#lf-results" data-counter="#lf-count">
+    <div class="row g-2">
+      <div class="col-md-5"><div class="search-input"><i class="bi bi-search"></i><input type="text" name="q" value="{{ filter_form.q.value|default:'' }}" class="form-control" placeholder="Search item, description or location…" autocomplete="off"></div></div>
+      <div class="col-md-2"><select name="item_type" class="form-select">{% for v, l in filter_form.fields.item_type.choices %}<option value="{{ v }}" {% if filter_form.item_type.value == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
+      <div class="col-md-3"><select name="category" class="form-select">{% for v, l in filter_form.fields.category.choices %}<option value="{{ v }}" {% if filter_form.category.value == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
+      <div class="col-md-2"><select name="status" class="form-select">{% for v, l in filter_form.fields.status.choices %}<option value="{{ v }}" {% if filter_form.status.value == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
+    </div>
+    <div class="small text-muted mt-2"><span id="lf-count">{{ page_obj.paginator.count }}</span> result(s) · results update as you type</div>
+  </form>
+  <div class="row g-3" id="lf-results">{% include "lostfound/_cards.html" with items=page_obj %}</div>
+  {% include "partials/pagination.html" %}
+</div>
+{% endblock %}

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid px-lg-5 py-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+    <div><div class="section-eyebrow">Administration</div><h1 class="h3 mb-0">Admin dashboard</h1></div>
+    <a href="/django-admin/" class="btn btn-soft btn-sm"><i class="bi bi-database-gear"></i> Django admin</a>
+  </div>
+  {% with n=request.resolver_match.url_name %}
+  <ul class="nav admin-nav gap-1 mb-4 flex-wrap">
+    <li class="nav-item"><a class="nav-link {% if n == 'admin' %}active{% endif %}" href="{% url 'dashboard:admin' %}"><i class="bi bi-graph-up"></i> Overview</a></li>
+    <li class="nav-item"><a class="nav-link {% if n == 'moderation' %}active{% endif %}" href="{% url 'dashboard:moderation' %}"><i class="bi bi-shield-check"></i> Moderation</a></li>
+    <li class="nav-item"><a class="nav-link {% if n == 'students' %}active{% endif %}" href="{% url 'dashboard:students' %}"><i class="bi bi-people"></i> Students</a></li>
+    <li class="nav-item"><a class="nav-link {% if n == 'buildings' %}active{% endif %}" href="{% url 'dashboard:buildings' %}"><i class="bi bi-buildings"></i> Buildings &amp; rooms</a></li>
+    <li class="nav-item"><a class="nav-link {% if n == 'manage' %}active{% endif %}" href="{% url 'announcements:manage' %}"><i class="bi bi-megaphone"></i> Announcements</a></li>
+    <li class="nav-item"><a class="nav-link {% if n == 'enquiries' %}active{% endif %}" href="{% url 'dashboard:enquiries' %}"><i class="bi bi-chat-left-text"></i> Enquiries</a></li>
+  </ul>
+  {% endwith %}
+  {% block admin_content %}{% endblock %}
+</div>
+{% endblock %}

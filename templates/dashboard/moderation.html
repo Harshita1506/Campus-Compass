@@ -1,0 +1,32 @@
+{% extends "dashboard/admin_base.html" %}
+{% block title %}Moderation{% endblock %}
+{% block admin_content %}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2"><h2 class="h4 mb-0">Reported listings</h2>
+  <div class="btn-group">
+    <a href="?status=open" class="btn btn-sm {% if status == 'open' %}btn-primary{% else %}btn-soft{% endif %}">Open</a>
+    <a href="?status=action_taken" class="btn btn-sm {% if status == 'action_taken' %}btn-primary{% else %}btn-soft{% endif %}">Action taken</a>
+    <a href="?status=dismissed" class="btn btn-sm {% if status == 'dismissed' %}btn-primary{% else %}btn-soft{% endif %}">Dismissed</a>
+    <a href="?status=all" class="btn btn-sm {% if status == 'all' %}btn-primary{% else %}btn-soft{% endif %}">All</a></div></div>
+<div class="card mb-4"><div class="table-responsive"><table class="table mb-0">
+  <thead><tr><th>Listing</th><th>Seller</th><th>Reason</th><th>Reporter</th><th>Status</th><th class="text-end">Actions</th></tr></thead>
+  <tbody>{% for r in reports %}<tr>
+    <td><a href="{{ r.product.get_absolute_url }}" class="fw-semibold">{{ r.product.title }}</a>{% if r.product.is_hidden %} <span class="badge text-bg-warning">Hidden</span>{% endif %}<div class="small text-muted">{{ r.details|truncatechars:80 }}</div></td>
+    <td>{{ r.product.seller.username }}</td><td>{{ r.get_reason_display }}</td><td>{{ r.reporter.username }}</td>
+    <td><span class="badge status-{{ r.status }}">{{ r.get_status_display }}</span></td>
+    <td class="text-end text-nowrap">{% if r.status == 'open' %}<form method="post" class="d-inline">{% csrf_token %}
+      <button formaction="{% url 'dashboard:moderate_report' r.pk 'hide' %}" class="btn btn-sm btn-soft">Hide listing</button>
+      <button formaction="{% url 'dashboard:moderate_report' r.pk 'dismiss' %}" class="btn btn-sm btn-soft">Dismiss</button>
+      <button formaction="{% url 'dashboard:moderate_report' r.pk 'delete' %}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this listing permanently?')">Delete</button></form>{% endif %}</td>
+  </tr>{% empty %}<tr><td colspan="6" class="text-muted">No reports in this view.</td></tr>{% endfor %}</tbody>
+</table></div></div>
+<div class="row g-4">
+  <div class="col-lg-6"><div class="card h-100"><div class="card-header">Hidden products</div><div class="card-body"><ul class="list-clean">
+    {% for p in hidden_products %}<li class="d-flex justify-content-between align-items-center"><div><a href="{{ p.get_absolute_url }}">{{ p.title }}</a> <span class="small text-muted">by {{ p.seller.username }}</span></div>
+      <form method="post" action="{% url 'dashboard:toggle_product' p.pk %}">{% csrf_token %}<button class="btn btn-sm btn-soft">Restore</button></form></li>
+    {% empty %}<li class="text-muted">No hidden products.</li>{% endfor %}</ul></div></div></div>
+  <div class="col-lg-6"><div class="card h-100"><div class="card-header">Recent lost &amp; found listings</div><div class="card-body"><ul class="list-clean">
+    {% for i in recent_items %}<li class="d-flex justify-content-between align-items-center"><div><span class="badge type-{{ i.item_type }}">{{ i.get_item_type_display }}</span> <a href="{{ i.get_absolute_url }}">{{ i.title }}</a> <span class="small text-muted">by {{ i.owner.username }}</span></div>
+      <form method="post" action="{% url 'dashboard:delete_item' i.pk %}" onsubmit="return confirm('Remove this listing?')">{% csrf_token %}<button class="btn btn-sm btn-outline-danger">Remove</button></form></li>
+    {% empty %}<li class="text-muted">No listings.</li>{% endfor %}</ul></div></div></div>
+</div>
+{% endblock %}

@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}{{ seller.display_name }} · Seller{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <div class="card p-4 mb-4 d-flex flex-row flex-wrap gap-3 align-items-center">
+    {% include "partials/avatar.html" with u=seller size="avatar-lg" %}
+    <div class="flex-grow-1"><h1 class="h3 mb-1">{{ seller.display_name }}</h1>
+      <div class="text-muted">{{ seller.profile.get_branch_display }} · {{ seller.profile.get_academic_year_display }} · Member since {{ seller.date_joined|date:"M Y" }}</div>
+      <div class="d-flex gap-2 mt-2"><span class="chip">{{ products|length }} listings</span><span class="chip chip-muted">{{ sold_count }} sold</span></div></div>
+    {% if seller != user %}<a href="{% url 'messaging:start' seller.pk %}" class="btn btn-primary"><i class="bi bi-chat-dots"></i> Message seller</a>{% endif %}
+  </div>
+  <div class="row g-3">{% include "marketplace/_cards.html" %}</div>
+</div>
+{% endblock %}
